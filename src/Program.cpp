@@ -1,4 +1,5 @@
 
+
 ////////////////////////////////////////////////////////////
 //	Headers
 ////////////////////////////////////////////////////////////
@@ -13,11 +14,11 @@ Program::Program()
 	this->initWindow();
 
 	CircleShape tempCircle;
-	tempCircle.setRadius(7.0f);
+	tempCircle.setRadius(4.0f);
 	tempCircle.setOrigin(tempCircle.getRadius(), tempCircle.getRadius());
 	tempCircle.setFillColor(sf::Color::White);
 
-	for (int i = 0; i < 500; i++) //spawn only 500 circles to decrease CPU load
+	for (int i = 0; i < 1000; i++) //spawn only 1000 circles to decrease CPU load
 	{
 		tempCircle.setPosition(
 			static_cast<float>(rand() % this->renderWindow->getSize().x),
@@ -62,18 +63,14 @@ void Program::onDraw()
 {
 	this->renderWindow->clear();
 
-	for (vector<CircleShape>::iterator iter = this->circles.begin(); iter != this->circles.end();)
+	for (unsigned iter = 0; iter < this->circles.size(); iter++)
 	{
-		this->renderWindow->draw(*iter);
-
-		++iter;
+		this->renderWindow->draw(this->circles[iter]);
 	}
 
-	for (vector<CircleShape>::iterator iter = this->staticCircles.begin(); iter != this->staticCircles.end();)
+	for (unsigned iter = 0; iter < this->staticCircles.size(); iter++)
 	{
-		this->renderWindow->draw(*iter);
-
-		++iter;
+		this->renderWindow->draw(this->staticCircles[iter]);
 	}
 
 	this->renderWindow->display();
@@ -85,7 +82,7 @@ void Program::onDraw()
 ////////////////////////////////////////////////////////////
 void Program::initWindow()
 {
-	this->videoMode = VideoMode(800, 600);
+	this->videoMode = VideoMode(600, 400);
 
 	this->renderWindow = new RenderWindow(this->videoMode, "Aggregation", sf::Style::Titlebar | sf::Style::Close);
 
@@ -116,7 +113,7 @@ void Program::eventHandler()
 				Vector2i mousePosition = sf::Mouse::getPosition(*this->renderWindow);
 
 				CircleShape tempCircle;
-				tempCircle.setRadius(7.0f);
+				tempCircle.setRadius(5.0f);
 				tempCircle.setOrigin(tempCircle.getRadius(), tempCircle.getRadius());
 				tempCircle.setFillColor(sf::Color::Green);
 				tempCircle.setPosition(
@@ -139,13 +136,11 @@ void Program::eventHandler()
 ////////////////////////////////////////////////////////////
 void Program::moveCircles()
 {
-	for (vector<CircleShape>::iterator iter = circles.begin(); iter != circles.end();)
+	for (unsigned iter = 0; iter < this->circles.size(); iter++)
 	{
-		iter->move(
+		this->circles[iter].move(
 			static_cast<float>(rand() % 9 - 4),
 			static_cast<float>(rand() % 9 - 4));
-
-		++iter;
 	}
 }
 
@@ -155,31 +150,29 @@ void Program::moveCircles()
 ////////////////////////////////////////////////////////////
 void Program::validateCirclePosition()
 {
-	for (vector<CircleShape>::iterator iter = circles.begin(); iter != circles.end();)
+	for (unsigned iter = 0; iter < this->circles.size(); iter++)
 	{
-		if (iter->getPosition().x < 0)
+		if (this->circles[iter].getPosition().x < 0)
 		{
-			iter->setPosition(0.0f, iter->getPosition().y);
+			this->circles[iter].setPosition(0.0f, this->circles[iter].getPosition().y);
 		}
-		else if (iter->getPosition().x > this->renderWindow->getSize().x)
+		else if (this->circles[iter].getPosition().x > this->renderWindow->getSize().x)
 		{
-			iter->setPosition(
+			this->circles[iter].setPosition(
 				static_cast<float>(this->renderWindow->getSize().x),
-				iter->getPosition().y);
+				this->circles[iter].getPosition().y);
 		}
 			
-		if (iter->getPosition().y < 0)
+		if (this->circles[iter].getPosition().y < 0)
 		{
-			iter->setPosition(iter->getPosition().x, 0.0f);
+			this->circles[iter].setPosition(this->circles[iter].getPosition().x, 0.0f);
 		}
-		else if (iter->getPosition().y > this->renderWindow->getSize().y)
+		else if (this->circles[iter].getPosition().y > this->renderWindow->getSize().y)
 		{
-			iter->setPosition(
-				iter->getPosition().x,
+			this->circles[iter].setPosition(
+				this->circles[iter].getPosition().x,
 				static_cast<float>(this->renderWindow->getSize().y));
 		}
-
-		++iter;
 	}
 }
 
@@ -187,27 +180,21 @@ void Program::checkForCollision()
 {
 	if (!this->staticCircles.empty() && !this->circles.empty())
 	{
-		for (vector<CircleShape>::iterator i = this->circles.begin(); i != this->circles.end();)
+		for (unsigned int i = 0; i < this->circles.size(); i++)
 		{
-			bool isErased = false;
-
-			for (vector<CircleShape>::iterator j = this->staticCircles.begin(); j < this->staticCircles.end(); ++j)
+			for (unsigned int j = 0; j < this->staticCircles.size(); j++)
 			{
-				if (areColliding(*i, *j))
+				if (areColliding(this->circles[i], this->staticCircles[j]))
 				{
-					i->setFillColor(sf::Color::Green);
+					this->circles[i].setFillColor(sf::Color::Green);
 
-					this->staticCircles.push_back(CircleShape(*i));
+					this->staticCircles.push_back(CircleShape(this->circles[i]));
 
-					i = this->circles.erase(i);
-
-					isErased = true;
+					this->circles.erase(this->circles.begin() + i);
 
 					break;
 				}
 			}
-
-			if (!isErased) ++i;
 		}
 	}
 }
